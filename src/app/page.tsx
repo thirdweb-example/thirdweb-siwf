@@ -228,16 +228,19 @@ export default function Home() {
 							</>
 						)}
 						{mintingStatus === "none" && (
-							<p className="w-full mx-auto text-slate-400 font-semibold">
+							<div className="w-full mx-auto text-slate-400 font-semibold">
 								{!fid &&
 									"Sign in with Farcaster to mint a commemorative FarCon NFT"}
 								{fid &&
 									smartAccount &&
 									"Click the card to mint ✨"}
-								{fid &&
-									!smartAccount &&
-									"Generating a smart wallet using your Farcaster account..."}
-							</p>
+								{fid && !smartAccount && (
+									<div className="flex justify-center items-center gap-2">
+										<Loader2Icon className="w-4 h-4 animate-spin" />
+										Generating smart wallet...
+									</div>
+								)}
+							</div>
 						)}
 					</div>
 				</button>
