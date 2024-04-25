@@ -208,7 +208,7 @@ export default function Home() {
 							)}
 						</div>
 					)}
-					<div className="w-full h-[300px] overflow-hidden border-slate-400/50 border h-auto rounded-lg relative">
+					<div className="w-full h-72 overflow-hidden border-slate-400/50 border rounded-lg relative">
 						<Image
 							src="/nft.png"
 							fill
