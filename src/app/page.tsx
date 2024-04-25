@@ -33,13 +33,11 @@ async function mint(account: Account, recipient: Address) {
 		to: recipient,
 		quantity: BigInt(1),
 	});
-	console.log("Minting", mintTx);
 
 	const res = await sendAndConfirmTransaction({
 		account,
 		transaction: mintTx,
 	});
-	console.log(res);
 
 	return res.transactionHash;
 }
