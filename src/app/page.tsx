@@ -85,7 +85,7 @@ export default function Home() {
 						message: res.message,
 						nonce: res.nonce,
 					}),
-					encryptionKey: `0x${res.signature}`,
+					encryptionKey: process.env.NEXT_PUBLIC_ENCRYPTION_KEY!,
 				});
 				setInAppAccount(account);
 			} catch (e) {
