@@ -217,7 +217,7 @@ export default function Home() {
 						/>
 					</div>
 					<div className="py-6 w-full">
-						{user.username && (
+						{user.username && fid && (
 							<>
 								<p className="w-full text-slate-100 font-semibold mb-1 text-sm text-center">
 									You&apos;re signed in as
