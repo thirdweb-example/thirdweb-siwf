@@ -1,113 +1,247 @@
+"use client";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { StatusAPIResponse, SignInButton } from "@farcaster/auth-kit";
+import { Account, inAppWallet } from "thirdweb/wallets";
+import thirdwebClient from "@/lib/thirdweb-client";
 import Image from "next/image";
+import useSmartAccount from "@/hooks/useSmartAccount";
+import {
+	Address,
+	defineChain,
+	getContract,
+	sendAndConfirmTransaction,
+} from "thirdweb";
+import { claimTo, mintTo } from "thirdweb/extensions/erc721";
+import classNames from "classnames";
+import { CheckIcon, Loader2Icon, XIcon } from "lucide-react";
+import Link from "next/link";
+
+type User = {
+	username?: string;
+	pfp?: string;
+};
+
+async function mint(account: Account, recipient: Address) {
+	const contract = getContract({
+		address: process.env.NEXT_PUBLIC_NFT_ADDRESS as Address,
+		chain: defineChain(Number(process.env.NEXT_PUBLIC_CHAIN_ID)),
+		client: thirdwebClient,
+	});
+
+	const mintTx = claimTo({
+		contract,
+		to: recipient,
+		quantity: BigInt(1),
+	});
+	console.log("Minting", mintTx);
+
+	const res = await sendAndConfirmTransaction({
+		account,
+		transaction: mintTx,
+	});
+	console.log(res);
+
+	return res.transactionHash;
+}
+
+async function getFarcasterProfile(fid: number): Promise<User> {
+	const res = await fetch(
+		`https://hub.pinata.cloud/v1/userDataByFid?fid=${fid}`
+	);
+
+	const data = await res.json();
+
+	const username = data.messages.find(
+		(msg: any) => msg.data.userDataBody.type === "USER_DATA_TYPE_USERNAME"
+	).data.userDataBody.value;
+	const pfp = data.messages.find(
+		(msg: any) => msg.data.userDataBody.type === "USER_DATA_TYPE_PFP"
+	).data.userDataBody.value;
+
+	return { username, pfp };
+}
 
 export default function Home() {
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">src/app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:size-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
+	const [inAppAccount, setInAppAccount] = useState<Account | undefined>();
+	const [fid, setFid] = useState<number | undefined>();
+	const [user, setUser] = useState<User>({});
+	const [mintingStatus, setMintingStatus] = useState<
+		"none" | "minting" | "error" | "minted"
+	>("none");
+	const [mintTx, setMintTx] = useState<string>("");
+	const { smartAccount } = useSmartAccount({ account: inAppAccount });
+	const wallet = useMemo(() => inAppWallet(), []);
 
-      <div className="relative z-[-1] flex place-items-center before:absolute before:h-[300px] before:w-full before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 sm:before:w-[480px] sm:after:w-[240px] before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
+	const handleSuccess = useCallback(
+		async (res: StatusAPIResponse) => {
+			try {
+				setFid(res.fid);
+				const account = await wallet.connect({
+					client: thirdwebClient,
+					chain: defineChain(
+						Number(process.env.NEXT_PUBLIC_CHAIN_ID)
+					),
+					strategy: "auth_endpoint",
+					payload: JSON.stringify({
+						signature: res.signature,
+						message: res.message,
+						nonce: res.nonce,
+					}),
+					encryptionKey: `0x${res.signature}`,
+				});
+				setInAppAccount(account);
+			} catch (e) {
+				setFid(undefined);
+				console.error(e);
+			} finally {
+			}
+		},
+		[wallet]
+	);
 
-      <div className="mb-32 grid text-center lg:mb-0 lg:w-full lg:max-w-5xl lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
+	const startMint = useCallback(async () => {
+		try {
+			if (!smartAccount) return;
+			setMintingStatus("minting");
+			const tx = await mint(
+				smartAccount,
+				smartAccount.address as Address
+			);
+			setMintingStatus("minted");
+			setMintTx(tx);
+		} catch (e) {
+			setMintingStatus("error");
+		}
+	}, [smartAccount]);
 
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
+	useEffect(() => {
+		if (fid) {
+			getFarcasterProfile(fid).then(setUser);
+		}
+	}, [fid]);
 
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-balance text-sm opacity-50">
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
-  );
+	return (
+		<main className="flex min-h-screen flex-col items-center gap-8">
+			<div className="w-screen flex-row gap-4 items-center h-24 flex justify-between px-4 py-6 mx-auto max-w-7xl">
+				<Image
+					src="/thirdweb.png"
+					width={1825}
+					height={296}
+					className="w-auto h-6"
+					alt="Thirdweb"
+				/>
+				{fid ? (
+					<Link
+						href={`https://warpcast.com/${user.username ?? ""}`}
+						target="_blank"
+						className="py-2 cursor-pointer transition hover:scale-105 px-3 bg-slate-500/20 border border-slate-400/50 rounded-xl items-center flex gap-3"
+					>
+						<div className="relative w-11 h-11 overflow-hidden rounded-full border border-slate-400/50">
+							{user.pfp && (
+								<Image
+									fill
+									src={user.pfp}
+									alt=""
+									className="object-cover object-center"
+								/>
+							)}
+						</div>
+						<div className="flex font-semibold flex-col items-start justify-center gap-0.5">
+							<div>{user.username}</div>
+							<div className="text-slate-400 text-sm">
+								Fid: {fid}
+							</div>
+						</div>
+					</Link>
+				) : (
+					<SignInButton onSuccess={handleSuccess} />
+				)}
+			</div>
+			<div className="mx-auto w-full max-w-3xl mx-auto h-full px-4 mt-16 flex-col gap-16 items-center text-center">
+				<button
+					onClick={startMint}
+					className={classNames(
+						"max-w-sm relative w-full mx-auto overflow-hidden flex flex-col gap-4 border border-slate-400/50 hover rounded-xl p-4 transition shadow-farcaster-purple/50 hover:shadow-farcaster-purple/75 shadow-2xl",
+						fid && mintingStatus === "none"
+							? "cursor-pointer hover:scale-105 focus: hover:-translate-y-2 active:scale-95"
+							: "cursor-default"
+					)}
+				>
+					{mintingStatus !== "none" && (
+						<div className="absolute w-full h-full bg-slate-900/75 top-0 left-0 z-10 inset-0 flex items-center justify-center">
+							{mintingStatus === "minting" && (
+								<div className="text-slate-100 flex flex-col items-center gap-2">
+									<Loader2Icon className="w-10 h-10 animate-spin" />
+									<p className="text-lg font-semibold">
+										Minting...
+									</p>
+								</div>
+							)}
+							{mintingStatus === "error" && (
+								<div className="text-slate-100 flex flex-col items-center gap-2">
+									<XIcon className="w-10 h-10" />
+									<p className="text-lg font-semibold">
+										Something went wrong!
+										<br />
+										Try again?
+									</p>
+								</div>
+							)}
+							{mintingStatus === "minted" && (
+								<div className="text-slate-100 flex flex-col items-center gap-2">
+									<CheckIcon className="w-10 h-10" />
+									<p className="text-lg font-semibold">
+										Mint successful!
+									</p>
+									<Link
+										href={`${
+											process.env
+												.NEXT_PUBLIC_BLOCK_EXPLORER_BASE_URL ??
+											"https://etherscan.io/tx"
+										}/${mintTx}`}
+										target="_blank"
+										className="underline"
+									>
+										View Transaction
+									</Link>
+								</div>
+							)}
+						</div>
+					)}
+					<div className="w-full h-[300px] overflow-hidden border-slate-400/50 border h-auto rounded-lg relative">
+						<Image
+							src="/nft.png"
+							fill
+							className="object-center object-cover"
+							alt="Sign in with Farcaster NFT"
+						/>
+					</div>
+					<div className="py-6 w-full">
+						{user.username && (
+							<>
+								<p className="w-full text-slate-100 font-semibold mb-1 text-sm text-center">
+									You&apos;re signed in as
+								</p>
+								<p className="w-full text-slate-100 font-semibold mb-4 text-xl text-center">
+									@{user.username}
+								</p>
+							</>
+						)}
+						{mintingStatus === "none" && (
+							<p className="w-full mx-auto text-slate-400 font-semibold">
+								{!fid &&
+									"Sign in with Farcaster to mint a commemorative FarCon NFT"}
+								{fid &&
+									smartAccount &&
+									"Click the card to mint ✨"}
+								{fid &&
+									!smartAccount &&
+									"Generating a smart wallet using your Farcaster account..."}
+							</p>
+						)}
+					</div>
+				</button>
+			</div>
+		</main>
+	);
 }
