@@ -162,7 +162,7 @@ export default function Home() {
 					onClick={startMint}
 					className={classNames(
 						"max-w-sm relative w-full mx-auto overflow-hidden flex flex-col gap-4 border border-slate-400/50 hover rounded-xl p-4 transition shadow-farcaster-purple/50 hover:shadow-farcaster-purple/75 shadow-2xl",
-						fid && mintingStatus === "none"
+						smartAccount && mintingStatus === "none"
 							? "cursor-pointer hover:scale-105 focus: hover:-translate-y-2 active:scale-95"
 							: "cursor-default"
 					)}
