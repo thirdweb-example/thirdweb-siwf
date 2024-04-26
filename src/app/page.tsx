@@ -12,7 +12,7 @@ import {
 } from "thirdweb";
 import { claimTo } from "thirdweb/extensions/erc721";
 import classNames from "classnames";
-import { CheckIcon, Loader2Icon, XIcon } from "lucide-react";
+import { CheckIcon, GithubIcon, Loader2Icon, XIcon } from "lucide-react";
 import Link from "next/link";
 import { useActiveAccount, useConnect } from "thirdweb/react";
 
@@ -123,8 +123,8 @@ export default function Home() {
 	}, [fid]);
 
 	return (
-		<main className="flex min-h-screen flex-col items-center gap-8">
-			<div className="w-screen flex-row gap-4 items-center h-24 flex justify-between px-4 py-6 mx-auto max-w-7xl">
+		<div className="min-h-screen flex-col flex items-center gap-8">
+			<header className="w-screen flex-row gap-4 items-center h-24 flex justify-between px-4 py-6 mx-auto max-w-7xl">
 				<Image
 					src="/thirdweb.png"
 					width={1825}
@@ -158,8 +158,8 @@ export default function Home() {
 				) : (
 					<SignInButton onSuccess={handleSuccess} />
 				)}
-			</div>
-			<div className="mx-auto w-full max-w-3xl mx-auto h-full px-4 mt-16 flex-col gap-16 items-center text-center">
+			</header>
+			<main className="mx-auto w-full flex-1 max-w-3xl mx-auto  px-4 py-16 gap-16">
 				<button
 					onClick={() => {
 						if (account && mintingStatus === "none") {
@@ -248,7 +248,17 @@ export default function Home() {
 						)}
 					</div>
 				</button>
-			</div>
-		</main>
+			</main>
+			<footer className="border-t w-full flex items-center justify-end px-4 border-slate-400/50 p-4 text-sm text-slate-400 text-center max-w-7xl mx-auto">
+				<Link
+					href="https://github.com/thirdweb-example/thirdweb-siwf"
+					target="_blank"
+					className="flex items-center gap-1 font-semibold hover:underline"
+				>
+					<GithubIcon className="w-4 h-4 mr-1" /> Fork this project on
+					GitHub
+				</Link>
+			</footer>
+		</div>
 	);
 }
