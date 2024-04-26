@@ -1,7 +1,7 @@
 ![banner](https://github.com/thirdweb-example/thirdweb-siwf/assets/17715009/9ec0129f-65ff-4016-a6a0-1e5a4efdad77)
 
 # Thirdweb Sign in with Farcaster Example
-[<img alt="Thirdweb SDK" src="https://img.shields.io/npm/v/thirdweb?label='Thirdweb SDK'&style=for-the-badge" height="30">]
+[<img alt="thirdweb SDK" src="https://img.shields.io/npm/v/thirdweb?label=Thirdweb SDK&style=for-the-badge&logo=npm" height="30">](https://www.npmjs.com/package/thirdweb)
 [<img alt="Discord" src="https://img.shields.io/discord/834227967404146718.svg?color=7289da&label=discord&logo=discord&style=for-the-badge" height="30">](https://discord.gg/thirdweb)
 
 
