@@ -1,6 +1,6 @@
 ![banner](https://github.com/thirdweb-example/thirdweb-siwf/assets/17715009/9ec0129f-65ff-4016-a6a0-1e5a4efdad77)
 
-# Thirdweb Sign in with Farcaster Example
+# thirdweb Sign in with Farcaster Example
 [<img alt="thirdweb SDK" src="https://img.shields.io/npm/v/thirdweb?label=Thirdweb SDK&style=for-the-badge&logo=npm" height="30">](https://www.npmjs.com/package/thirdweb)
 [<img alt="Discord" src="https://img.shields.io/discord/834227967404146718.svg?color=7289da&label=discord&logo=discord&style=for-the-badge" height="30">](https://discord.gg/thirdweb)
 
@@ -9,21 +9,22 @@ This example app showcases how to authenticate users via Farcaster (specifically
 
 ## Getting Started
 
-> This project assumes some basic knowledge of TypeScript, Next.js App Router, and the [Thirdweb SDK](https://portal.thirdweb.com/typescript/v5).
+> This project assumes some basic knowledge of TypeScript, Next.js App Router, and [Connect SDK](https://portal.thirdweb.com/typescript/v5).
 
-### Deploy contracts and configure your `.env`
+## Environment Variables
+
 1. Create your `.env` by running `cp .env.example .env` in the project root.
 
-2. Create a client ID from the [Thirdweb dashboard](https://thirdweb.com/dashboard/settings/api-keys) and add it to your `.env` as `NEXT_PUBLIC_THIRDWEB_CLIENT_ID`.
+2. Create a client ID from the [thirdweb dashboard](https://thirdweb.com/dashboard/settings/api-keys) and add it to your `.env` as `NEXT_PUBLIC_THIRDWEB_CLIENT_ID`.
 
-3. Deplot an [`AccountFactory`](https://thirdweb.com/thirdweb.eth/AccountFactory) on your chain of choice from the Thirdweb dashboard and paste the contract address in your `.env` as `NEXT_PUBLIC_FACTORY_ADDRESS`.
+3. Deploy an [`AccountFactory`](https://thirdweb.com/thirdweb.eth/AccountFactory) on your chain of choice from the thirdweb dashboard and paste the contract address in your `.env` as `NEXT_PUBLIC_FACTORY_ADDRESS`.
 
-4. Deploy a new [`OpenEditionERC721`](https://thirdweb.com/thirdweb.eth/OpenEditionERC721) contract on your chain of choice from the Thirdweb dashboard and add a claim period with no restrictions. Paste the contract's address in your `.env` as `NEXT_PUBLIC_NFT_ADDRESS`.
+4. Deploy a new [`OpenEditionERC721`](https://thirdweb.com/thirdweb.eth/OpenEditionERC721) contract on your chain of choice from the thirdweb dashboard and add a claim period with no restrictions. Paste the contract's address in your `.env` as `NEXT_PUBLIC_NFT_ADDRESS`.
 
 5. Set your chain ID, block explorer base url (this should be the base url up until the transaction hash, for etherscan mainnet it would be `https://etherscan.io/tx/`), and an encryption key of your choice in your `.env`
 
-### Set your authentication endpoint
-This project uses an incredibly powerful Thirdweb feature called [Authentication Endpoints](https://portal.thirdweb.com/connect/in-app-wallet/custom-auth/custom-auth-server). It uses your own API endpoint to generate a wallet for users on successful authentication. All the code for this is written for you in this project, you'll just need to set the endpoint in your Thirdweb dashboard.
+## Set authentication endpoint
+This project uses an incredibly powerful thirdweb feature called [Authentication Endpoints](https://portal.thirdweb.com/connect/in-app-wallet/custom-auth/custom-auth-server). It uses your own API endpoint to generate a wallet for users on successful authentication. All the code for this is written for you in this project, you'll just need to set the endpoint in your thirdweb dashboard.
 
 > To use Custom Authentication Endpoints, you'll need to be on the Growth Plan. If you have questions about the plan options or want to try it out, [reach out to our team](https://thirdweb.com/contact-us).
 
@@ -37,7 +38,7 @@ Once you have your ngrok or similar endpoint, add it to the Authentication Endpo
 
 You're now ready to run the project!
 
-> **When you deploy to production (or any live URL), you'll modify this authentication endpoint to be your actual live URL. You could also create a separate Thirdweb project for local development and production.**
+> **When you deploy to production (or any live URL), you'll modify this authentication endpoint to be your actual live URL. You could also create a separate thirdweb project for local development and production.**
 
 ### Run the project
 You're now ready to test the project! First, install the dependencies:
@@ -137,4 +138,12 @@ async function mint(account: Account, recipient: Address) {
 }
 ```
 
-If you have any trouble running the project, reach out in our [Discord](https://discord.com/invite/thirdweb). Otherwise, check out our [other templates](https://thirdweb.com/templates) for more examples!
+## Documentation
+
+- [TypeScript SDK](https://portal.thirdweb.com/typescript/v5)
+- [Next.js Docs](https://nextjs.org/docs)
+
+
+## Support 
+
+For help or feedback, please [visit our support site](https://thirdweb.com/support)
