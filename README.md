@@ -73,18 +73,16 @@ In `handleSuccess`, we optimistically set their fid (it will unset if the signat
 const handleSuccess = async (res: StatusAPIResponse) => {
 	await wallet.connect({
  		client: thirdwebClient,
- 		chain: defineChain(
- 			Number(process.env.NEXT_PUBLIC_CHAIN_ID)
- 					),
- 					strategy: "auth_endpoint",
- 					payload: JSON.stringify({
-  						signature: res.signature,
-  						message: res.message,
-  						nonce: res.nonce,
- 					}),
- 					encryptionKey: process.env.NEXT_PUBLIC_ENCRYPTION_KEY!,
-				});
-				await connect(wallet);
+ 		chain: defineChain(Number(process.env.NEXT_PUBLIC_CHAIN_ID)),
+		strategy: "auth_endpoint",
+		payload: JSON.stringify({
+  		signature: res.signature,
+  		message: res.message,
+  		nonce: res.nonce,
+		}),
+ 		encryptionKey: process.env.NEXT_PUBLIC_ENCRYPTION_KEY!,
+	});
+	await connect(wallet);
 };
 ```
 
