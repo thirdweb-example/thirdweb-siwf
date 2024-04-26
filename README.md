@@ -1,6 +1,9 @@
 ![banner](https://github.com/thirdweb-example/thirdweb-siwf/assets/17715009/9ec0129f-65ff-4016-a6a0-1e5a4efdad77)
 
 # Thirdweb Sign in with Farcaster Example
+[<img alt="Thirdweb SDK" src="https://img.shields.io/npm/v/thirdweb?label='Thirdweb SDK'&style=for-the-badge" height="30">]
+[<img alt="Discord" src="https://img.shields.io/discord/834227967404146718.svg?color=7289da&label=discord&logo=discord&style=for-the-badge" height="30">](https://discord.gg/thirdweb)
+
 
 This example app showcases how to authenticate users via Farcaster (specifically Warpcast) and generate a unique reusable smart wallet from their Farcaster signature.
 
@@ -134,4 +137,4 @@ async function mint(account: Account, recipient: Address) {
 }
 ```
 
-Check out our [other templates](https://thirdweb.com/templates) for more examples!
+If you have any trouble running the project, reach out in our [Discord](https://discord.com/invite/thirdweb). Otherwise, check out our [other templates](https://thirdweb.com/templates) for more examples!
