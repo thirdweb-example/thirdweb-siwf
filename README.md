@@ -95,12 +95,12 @@ We use the `useConnect` hook from the [React SDK](https://portal.thirdweb.com/ty
 
 ```ts
 const { connect } = useConnect({
- 		client: thirdwebClient,
- 		accountAbstraction: {
-  			gasless: true,
-  			chain: defineChain(Number(process.env.NEXT_PUBLIC_CHAIN_ID)),
-  			factoryAddress: process.env.NEXT_PUBLIC_FACTORY_ADDRESS as Address,
- 		},
+	client: thirdwebClient,
+ 	accountAbstraction: {
+  		gasless: true,
+  		chain: defineChain(Number(process.env.NEXT_PUBLIC_CHAIN_ID)),
+  		factoryAddress: process.env.NEXT_PUBLIC_FACTORY_ADDRESS as Address,
+	},
 });
 ```
 
