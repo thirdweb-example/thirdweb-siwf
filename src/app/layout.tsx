@@ -9,7 +9,7 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
 	title: "SIWF by Thirdweb",
 	description:
-		"Authenticate to an ethereum smart wallet using your Farcaster account to mint an exclusive FarCon NFT.",
+		"Authenticate to an ethereum smart wallet using your Farcaster account to mint a commemorative FarCon NFT.",
 };
 
 export default function RootLayout({
