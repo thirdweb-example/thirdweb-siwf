@@ -249,7 +249,7 @@ export default function Home() {
 					</div>
 				</button>
 			</main>
-			<footer className="border-t w-full flex items-center justify-end px-4 border-slate-400/50 p-4 text-sm text-slate-400 text-center max-w-7xl mx-auto">
+			<footer className="border-t w-full flex items-center justify-center md:justify-end px-4 border-slate-400/50 p-4 text-sm text-slate-400 text-center max-w-7xl mx-auto">
 				<Link
 					href="https://github.com/thirdweb-example/thirdweb-siwf"
 					target="_blank"
