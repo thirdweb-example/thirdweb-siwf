@@ -26,6 +26,8 @@ This project uses an incredibly powerful Thirdweb feature called [Authentication
 
 Navigate to the [In-App Wallets](https://thirdweb.com/dashboard/connect/in-app-wallets) page on the dashboard and select your project from the dropdown. **This should be the same project your `clientId` is from.** Then click the **"Configuration" tab** and scroll down to "Custom Authentication Endpoint" and enable the toggle. You'll then see a field to enter your endpoint.
 
+<img width="1215" alt="Screenshot 2024-04-25 at 10 46 11 PM" src="https://github.com/thirdweb-example/thirdweb-siwf/assets/17715009/b05825c1-96b3-4e58-908e-c47002c4c02f">
+
 While testing the project locally, you'll need a publicly exposed endpoint to authenticate through. We recommend using a tool like [ngrok](https://ngrok.com/product/secure-tunnels) to create a public endpoint that forwards traffic to your local server. Forward your traffic to `http://localhost:3000` (where your app will run locally).
 
 Once you have your ngrok or similar endpoint, add it to the Authentication Endpoint field as `[YOUR FORWARDING ENDPOINT]/api/authenticate`, the route this app uses to perform authentication.
@@ -65,7 +67,26 @@ All the logic for this example can be found in `page.tsx`. The most important ar
 ### Authenticating the user
 We use [Farcaster AuthKit](https://docs.farcaster.xyz/auth-kit/introduction) to handle the connection with Warpcast. On the Farcaster sign in button we specify `handleSuccess` as a success callback. When the user authenticates with Warpcast, this function will be called with the user's signature.
 
-In `handleSuccess`, we optimistically set their fid (it will unset if the signature verification or wallet generation fail), then connect using the `"auth_endpoint"` strategy. This strategy needs a `payload` and `encryptionKey` that will be sent to the authentication endpoint we specified in the dashboard.
+In `handleSuccess`, we optimistically set their fid (it will unset if the signature verification or wallet generation fail), then connect using the `"auth_endpoint"` strategy. This strategy needs a `payload` and `encryptionKey` that will be sent to the authentication endpoint we specified in the dashboard. The code below is simplified from the actual project.
+
+```ts
+const handleSuccess = async (res: StatusAPIResponse) => {
+				await wallet.connect({
+ 					client: thirdwebClient,
+ 					chain: defineChain(
+ 						 Number(process.env.NEXT_PUBLIC_CHAIN_ID)
+ 					),
+ 					strategy: "auth_endpoint",
+ 					payload: JSON.stringify({
+  						signature: res.signature,
+  						message: res.message,
+  						nonce: res.nonce,
+ 					}),
+ 					encryptionKey: process.env.NEXT_PUBLIC_ENCRYPTION_KEY!,
+				});
+				await connect(wallet);
+};
+```
 
 Then in the `/api/authenticate/route.ts` file we specify a `POST` handler that accepts the payload and verifies the signature. If this route returns a `userId`, it's considered to be successful and generates and/or connects the user's in-app wallet.
 
@@ -74,6 +95,17 @@ Since this user's wallet is generated the first time they sign into our app, it 
 
 We use the `useConnect` hook from the [React SDK](https://portal.thirdweb.com/typescript/v5/react) to specify the client and account abstraction options (gasless enabled, factory address, and chain). This hook returns a `connect` function that will wrap our in-app wallet and set the app's currently active wallet to this smart wallet.
 
+```ts
+const { connect } = useConnect({
+ 		client: thirdwebClient,
+ 		accountAbstraction: {
+  			gasless: true,
+  			chain: defineChain(Number(process.env.NEXT_PUBLIC_CHAIN_ID)),
+  			factoryAddress: process.env.NEXT_PUBLIC_FACTORY_ADDRESS as Address,
+ 		},
+});
+```
+
 > Note; We setup a [ThirdwebProvider](https://portal.thirdweb.com/typescript/v5/react/ThirdwebProvider) in `Providers.tsx` for the `useConnect` and `useActiveAccount` hooks to work.
  
 Once our smart wallet is connected, the `useActiveAccount` hook will return it, allowing us to enable minting the NFT.
@@ -81,5 +113,27 @@ Once our smart wallet is connected, the `useActiveAccount` hook will return it, 
 ### Minting the NFT
 Once the smart account is ready we enable the minting button. When clicked, it calls `mint`, a simple function that uses the Thirdweb SDK's ERC721 extension to generate a `claimTo` transaction, then we send and await the transaction result in one `sendAndConfirmTransaction` call. With extensions, we don't need to worry about ABIs, argument arrays, calldata, or any other "low-level" concepts. All the complicated elements are abstracted away from the frontend code.
 
+```ts
+async function mint(account: Account, recipient: Address) {
+ 	const contract = getContract({
+  		address: process.env.NEXT_PUBLIC_NFT_ADDRESS as Address,
+  		chain: defineChain(Number(process.env.NEXT_PUBLIC_CHAIN_ID)),
+  		client: thirdwebClient,
+ 	});
+ 
+ 	const mintTx = claimTo({
+  		contract,
+  		to: recipient,
+  		quantity: BigInt(1),
+ 	});
+ 
+ 	const res = await sendAndConfirmTransaction({
+  		account,
+  		transaction: mintTx,
+ 	});
+ 
+ 	return res.transactionHash;
+}
+```
 
 Check out our [other templates](https://thirdweb.com/templates) for more examples!
