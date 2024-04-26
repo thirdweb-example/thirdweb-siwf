@@ -30,8 +30,8 @@ dependencies:
     specifier: ^18
     version: 18.2.0(react@18.2.0)
   thirdweb:
-    specifier: ^5.12.0
-    version: 5.12.0(@types/react-dom@18.2.25)(@types/react@18.2.79)(ethers@6.12.0)(react-dom@18.2.0)(react@18.2.0)(typescript@5.4.5)
+    specifier: ^5.13.0
+    version: 5.13.0(@types/react-dom@18.2.25)(@types/react@18.2.79)(ethers@6.12.0)(react-dom@18.2.0)(react@18.2.0)(typescript@5.4.5)
 
 devDependencies:
   '@types/node':
@@ -5879,8 +5879,8 @@ packages:
       any-promise: 1.3.0
     dev: true
 
-  /thirdweb@5.12.0(@types/react-dom@18.2.25)(@types/react@18.2.79)(ethers@6.12.0)(react-dom@18.2.0)(react@18.2.0)(typescript@5.4.5):
-    resolution: {integrity: sha512-cQSO760M9gac/5wX0Ykahzu1kR6Uf585zqdeuB7UyTWu+UHPZ6nH/2Fno1wKAtnG4Hz5s0nZad+/ko+ouDbIiA==}
+  /thirdweb@5.13.0(@types/react-dom@18.2.25)(@types/react@18.2.79)(ethers@6.12.0)(react-dom@18.2.0)(react@18.2.0)(typescript@5.4.5):
+    resolution: {integrity: sha512-XF0OGBUBYiIQH/e0q34frW/6HOi9p8YWYSZSQaYdl/5lotWK6+7fIg/d8TYcv/3bMZhrDffiLyFkbkJaRQOxwA==}
     engines: {node: '>=18'}
     hasBin: true
     peerDependencies:
