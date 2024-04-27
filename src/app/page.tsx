@@ -1,6 +1,10 @@
 "use client";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { StatusAPIResponse, SignInButton } from "@farcaster/auth-kit";
+import {
+	StatusAPIResponse,
+	SignInButton,
+	useSignIn,
+} from "@farcaster/auth-kit";
 import { Account, inAppWallet } from "thirdweb/wallets";
 import thirdwebClient from "@/lib/thirdweb-client";
 import Image from "next/image";
@@ -129,6 +133,7 @@ export default function Home() {
 		contract: NFT_CONTRACT,
 		events: [tokensClaimedEvent({ claimer: account?.address })],
 	});
+	const { isSuccess, data } = useSignIn({});
 	const { connect } = useConnect({
 		client: thirdwebClient,
 		accountAbstraction: {
@@ -137,12 +142,6 @@ export default function Home() {
 			factoryAddress: process.env.NEXT_PUBLIC_FACTORY_ADDRESS as Address,
 		},
 	});
-
-	useEffect(() => {
-		if (events) {
-			setTokenId(events[events.length - 1].args.startTokenId); // get the *last* tokenId (in case they've minted multiple)
-		}
-	}, [events]);
 
 	const handleSuccess = useCallback(
 		async (res: StatusAPIResponse) => {
@@ -205,6 +204,18 @@ export default function Home() {
 		}
 	}, [fid]);
 
+	useEffect(() => {
+		if (data) {
+			handleSuccess(data);
+		}
+	}, [data, handleSuccess]);
+
+	useEffect(() => {
+		if (events) {
+			setTokenId(events[events.length - 1].args.startTokenId); // get the *last* tokenId (in case they've minted multiple)
+		}
+	}, [events]);
+
 	return (
 		<div className="min-h-screen flex-col flex items-center gap-8">
 			<header className="w-screen flex-row gap-4 items-center h-24 flex justify-between px-4 py-6 mx-auto max-w-7xl">
@@ -239,7 +250,7 @@ export default function Home() {
 						</div>
 					</Link>
 				) : (
-					<SignInButton onSuccess={handleSuccess} />
+					<SignInButton hideSignOut onSuccess={handleSuccess} />
 				)}
 			</header>
 			<main className="mx-auto w-full flex-1 max-w-3xl mx-auto  px-4 py-16 gap-16">
