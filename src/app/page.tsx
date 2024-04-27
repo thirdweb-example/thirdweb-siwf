@@ -121,7 +121,7 @@ async function getFarcasterProfile(fid: number): Promise<User> {
 export default function Home() {
 	const [fid, setFid] = useState<number | undefined>();
 	const [user, setUser] = useState<User>({});
-	const [mintingStatus, setMintingStatus] = useState<
+	const [status, setStatus] = useState<
 		"none" | "minting" | "error" | "minted" | "transferring" | "transferred"
 	>("none");
 	const [tokenId, setTokenId] = useState<bigint | undefined>();
@@ -172,13 +172,13 @@ export default function Home() {
 	const startMint = useCallback(async () => {
 		try {
 			if (!account) return;
-			setMintingStatus("minting");
+			setStatus("minting");
 			const tx = await mint(account, account.address as Address);
 			setMintTx(tx);
-			setMintingStatus("minted");
+			setStatus("minted");
 		} catch (e) {
 			console.error(e);
-			setMintingStatus("error");
+			setStatus("error");
 		}
 	}, [account]);
 
@@ -186,13 +186,13 @@ export default function Home() {
 		async (address: Address) => {
 			try {
 				if (!account || !tokenId) return;
-				setMintingStatus("transferring");
+				setStatus("transferring");
 				const tx = await transfer(account, address, tokenId);
 				setTransferTx(tx);
-				setMintingStatus("transferred");
+				setStatus("transferred");
 			} catch (e) {
 				console.error(e);
-				setMintingStatus("error");
+				setStatus("error");
 			}
 		},
 		[account, tokenId]
@@ -256,20 +256,20 @@ export default function Home() {
 			<main className="mx-auto w-full flex-1 max-w-3xl mx-auto  px-4 py-16 gap-16">
 				<div
 					onClick={() => {
-						if (account && mintingStatus === "none") {
+						if (account && status === "none") {
 							startMint();
 						}
 					}}
 					className={classNames(
 						"max-w-sm relative w-full mx-auto overflow-hidden flex flex-col gap-4 border border-slate-400/50 hover rounded-xl p-4 transition shadow-farcaster-purple/50 hover:shadow-farcaster-purple/75 shadow-2xl",
-						account && mintingStatus === "none"
+						account && status === "none"
 							? "cursor-pointer hover:scale-105 focus: hover:-translate-y-2 active:scale-95"
 							: "cursor-default"
 					)}
 				>
-					{mintingStatus !== "none" && (
+					{status !== "none" && (
 						<div className="absolute text-center w-full h-full bg-slate-900/90 top-0 left-0 z-10 inset-0 flex items-center justify-center">
-							{mintingStatus === "minting" && (
+							{status === "minting" && (
 								<div className="text-slate-100 flex flex-col items-center gap-2">
 									<Loader2Icon className="w-10 h-10 animate-spin" />
 									<p className="text-lg font-semibold">
@@ -277,7 +277,7 @@ export default function Home() {
 									</p>
 								</div>
 							)}
-							{mintingStatus === "error" && (
+							{status === "error" && (
 								<div className="text-slate-100 flex flex-col items-center gap-2">
 									<XIcon className="w-10 h-10" />
 									<p className="text-lg font-semibold">
@@ -287,7 +287,7 @@ export default function Home() {
 									</p>
 								</div>
 							)}
-							{mintingStatus === "minted" && (
+							{status === "minted" && (
 								<div className="text-slate-100 flex flex-col items-center gap-12">
 									<div className="flex flex-col items-center gap-1">
 										<CheckIcon className="w-10 h-10" />
@@ -335,7 +335,7 @@ export default function Home() {
 									)}
 								</div>
 							)}
-							{mintingStatus === "transferring" && (
+							{status === "transferring" && (
 								<div className="text-slate-100 flex flex-col items-center gap-2">
 									<Loader2Icon className="w-10 h-10 animate-spin" />
 									{user.preferredAddress && (
@@ -348,7 +348,7 @@ export default function Home() {
 									)}
 								</div>
 							)}
-							{mintingStatus === "transferred" && (
+							{status === "transferred" && (
 								<div className="text-slate-100 flex flex-col items-center gap-12">
 									<div className="flex flex-col items-center gap-1">
 										<CheckIcon className="w-10 h-10" />
@@ -390,7 +390,7 @@ export default function Home() {
 								</p>
 							</>
 						)}
-						{mintingStatus === "none" && (
+						{status === "none" && (
 							<div className="w-full mx-auto text-slate-400 font-semibold">
 								{!fid &&
 									"Sign in with Farcaster to mint a commemorative FarCon NFT"}
