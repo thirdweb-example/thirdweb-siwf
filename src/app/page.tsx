@@ -10,26 +10,42 @@ import {
 	getContract,
 	sendAndConfirmTransaction,
 } from "thirdweb";
-import { claimTo } from "thirdweb/extensions/erc721";
+import {
+	claimTo,
+	tokensClaimedEvent,
+	transferFrom,
+} from "thirdweb/extensions/erc721";
 import classNames from "classnames";
 import { CheckIcon, GithubIcon, Loader2Icon, XIcon } from "lucide-react";
 import Link from "next/link";
-import { useActiveAccount, useConnect } from "thirdweb/react";
+import {
+	useActiveAccount,
+	useConnect,
+	useContractEvents,
+} from "thirdweb/react";
+
+/**
+ * 	This codebase is meant for demo purposes only.
+ *
+ * 	While you can use it as a starting point for your application, it's not recommended for production use.
+ */
 
 type User = {
 	username?: string;
 	pfp?: string;
+	addresses?: Address[];
+	preferredAddress?: Address;
 };
 
-async function mint(account: Account, recipient: Address) {
-	const contract = getContract({
-		address: process.env.NEXT_PUBLIC_NFT_ADDRESS as Address,
-		chain: defineChain(Number(process.env.NEXT_PUBLIC_CHAIN_ID)),
-		client: thirdwebClient,
-	});
+const NFT_CONTRACT = getContract({
+	address: process.env.NEXT_PUBLIC_NFT_ADDRESS as Address,
+	chain: defineChain(Number(process.env.NEXT_PUBLIC_CHAIN_ID)),
+	client: thirdwebClient,
+});
 
+async function mint(account: Account, recipient: Address) {
 	const mintTx = claimTo({
-		contract,
+		contract: NFT_CONTRACT,
 		to: recipient,
 		quantity: BigInt(1),
 	});
@@ -42,7 +58,39 @@ async function mint(account: Account, recipient: Address) {
 	return res.transactionHash;
 }
 
-async function getFarcasterProfile(fid: number): Promise<User> {
+async function transfer(account: Account, recipient: Address, tokenId: bigint) {
+	const transferTx = transferFrom({
+		contract: NFT_CONTRACT,
+		from: account.address as Address,
+		to: recipient,
+		tokenId,
+	});
+
+	const res = await sendAndConfirmTransaction({
+		account,
+		transaction: transferTx,
+	});
+
+	return res.transactionHash;
+}
+
+async function getFarcasterLinkedAddresses(fid: number) {
+	const res = await fetch(
+		`https://hub.pinata.cloud/v1/verificationsByFid?fid=${fid}`
+	);
+
+	const data = await res.json();
+
+	return data.messages
+		.filter(
+			(msg: any) =>
+				msg.data.type === `MESSAGE_TYPE_VERIFICATION_ADD_ETH_ADDRESS`
+		)
+		.map((msg: any) => msg.data.verificationAddEthAddressBody.address)
+		.filter((address: Address) => address !== undefined);
+}
+
+async function getFatcasterUser(fid: number) {
 	const res = await fetch(
 		`https://hub.pinata.cloud/v1/userDataByFid?fid=${fid}`
 	);
@@ -59,15 +107,28 @@ async function getFarcasterProfile(fid: number): Promise<User> {
 	return { username, pfp };
 }
 
+async function getFarcasterProfile(fid: number): Promise<User> {
+	const { username, pfp } = await getFatcasterUser(fid);
+	const addresses = await getFarcasterLinkedAddresses(fid);
+
+	return { username, pfp, addresses };
+}
+
 export default function Home() {
 	const [fid, setFid] = useState<number | undefined>();
 	const [user, setUser] = useState<User>({});
 	const [mintingStatus, setMintingStatus] = useState<
-		"none" | "minting" | "error" | "minted"
+		"none" | "minting" | "error" | "minted" | "transferring" | "transferred"
 	>("none");
+	const [tokenId, setTokenId] = useState<bigint | undefined>();
 	const [mintTx, setMintTx] = useState<string>("");
+	const [transferTx, setTransferTx] = useState<string>("");
 	const wallet = useMemo(() => inAppWallet(), []);
 	const account = useActiveAccount();
+	const { data: events } = useContractEvents({
+		contract: NFT_CONTRACT,
+		events: [tokensClaimedEvent({ claimer: account?.address })],
+	});
 	const { connect } = useConnect({
 		client: thirdwebClient,
 		accountAbstraction: {
@@ -76,6 +137,12 @@ export default function Home() {
 			factoryAddress: process.env.NEXT_PUBLIC_FACTORY_ADDRESS as Address,
 		},
 	});
+
+	useEffect(() => {
+		if (events) {
+			setTokenId(events[events.length - 1].args.startTokenId); // get the *last* tokenId (in case they've minted multiple)
+		}
+	}, [events]);
 
 	const handleSuccess = useCallback(
 		async (res: StatusAPIResponse) => {
@@ -98,7 +165,6 @@ export default function Home() {
 			} catch (e) {
 				setFid(undefined);
 				console.error(e);
-			} finally {
 			}
 		},
 		[wallet, connect]
@@ -109,12 +175,29 @@ export default function Home() {
 			if (!account) return;
 			setMintingStatus("minting");
 			const tx = await mint(account, account.address as Address);
-			setMintingStatus("minted");
 			setMintTx(tx);
+			setMintingStatus("minted");
 		} catch (e) {
+			console.error(e);
 			setMintingStatus("error");
 		}
 	}, [account]);
+
+	const startTransfer = useCallback(
+		async (address: Address) => {
+			try {
+				if (!account || !tokenId) return;
+				setMintingStatus("transferring");
+				const tx = await transfer(account, address, tokenId);
+				setTransferTx(tx);
+				setMintingStatus("transferred");
+			} catch (e) {
+				console.error(e);
+				setMintingStatus("error");
+			}
+		},
+		[account, tokenId]
+	);
 
 	useEffect(() => {
 		if (fid) {
@@ -160,7 +243,7 @@ export default function Home() {
 				)}
 			</header>
 			<main className="mx-auto w-full flex-1 max-w-3xl mx-auto  px-4 py-16 gap-16">
-				<button
+				<div
 					onClick={() => {
 						if (account && mintingStatus === "none") {
 							startMint();
@@ -174,7 +257,7 @@ export default function Home() {
 					)}
 				>
 					{mintingStatus !== "none" && (
-						<div className="absolute w-full h-full bg-slate-900/75 top-0 left-0 z-10 inset-0 flex items-center justify-center">
+						<div className="absolute text-center w-full h-full bg-slate-900/90 top-0 left-0 z-10 inset-0 flex items-center justify-center">
 							{mintingStatus === "minting" && (
 								<div className="text-slate-100 flex flex-col items-center gap-2">
 									<Loader2Icon className="w-10 h-10 animate-spin" />
@@ -194,22 +277,85 @@ export default function Home() {
 								</div>
 							)}
 							{mintingStatus === "minted" && (
+								<div className="text-slate-100 flex flex-col items-center gap-12">
+									<div className="flex flex-col items-center gap-1">
+										<CheckIcon className="w-10 h-10" />
+										<p className="text-lg font-semibold">
+											Mint successful!
+										</p>
+										<Link
+											href={`${
+												process.env
+													.NEXT_PUBLIC_BLOCK_EXPLORER_BASE_URL ??
+												"https://etherscan.io/tx/"
+											}${mintTx}`}
+											target="_blank"
+											className="underline"
+										>
+											View Transaction
+										</Link>
+									</div>
+									{account && tokenId && fid && (
+										<div className="flex flex-col gap-3 md:gap-1">
+											<p className="text-slate-400 max-w-[150px] text-center text-sm mb-2">
+												Select an address to transfer
+												your NFT:
+											</p>
+											{user.addresses?.map((address) => (
+												<button
+													key={address}
+													onClick={() => {
+														setUser({
+															...user,
+															preferredAddress:
+																address,
+														});
+														startTransfer(address);
+													}}
+													className="hover:before:content-['👉'] before:absolute before:-translate-x-6 before:transition-opacity before:transition-duration-800 hover:before:opacity-100 before:opacity-0 font-semibold text-slate-100"
+												>
+													{`${address.slice(
+														0,
+														6
+													)}...${address.slice(-4)}`}
+												</button>
+											))}
+										</div>
+									)}
+								</div>
+							)}
+							{mintingStatus === "transferring" && (
 								<div className="text-slate-100 flex flex-col items-center gap-2">
-									<CheckIcon className="w-10 h-10" />
-									<p className="text-lg font-semibold">
-										Mint successful!
-									</p>
-									<Link
-										href={`${
-											process.env
-												.NEXT_PUBLIC_BLOCK_EXPLORER_BASE_URL ??
-											"https://etherscan.io/tx"
-										}/${mintTx}`}
-										target="_blank"
-										className="underline"
-									>
-										View Transaction
-									</Link>
+									<Loader2Icon className="w-10 h-10 animate-spin" />
+									{user.preferredAddress && (
+										<div className="text-lg font-semibold">
+											Transferring to <br />
+											{user.preferredAddress.slice(0, 6)}
+											...
+											{user.preferredAddress.slice(-4)}
+										</div>
+									)}
+								</div>
+							)}
+							{mintingStatus === "transferred" && (
+								<div className="text-slate-100 flex flex-col items-center gap-12">
+									<div className="flex flex-col items-center gap-1">
+										<CheckIcon className="w-10 h-10" />
+										<p className="text-lg font-semibold">
+											Transfer complete!
+										</p>
+										<Link
+											href={`${
+												process.env
+													.NEXT_PUBLIC_BLOCK_EXPLORER_BASE_URL ??
+												"https://etherscan.io/tx/"
+											}${transferTx}`}
+											target="_blank"
+											className="underline"
+										>
+											View Transaction
+										</Link>
+									</div>
 								</div>
 							)}
 						</div>
@@ -222,7 +368,7 @@ export default function Home() {
 							alt="Sign in with Farcaster NFT"
 						/>
 					</div>
-					<div className="py-6 w-full">
+					<div className="py-6 w-full text-center">
 						{user.username && fid && (
 							<>
 								<p className="w-full text-slate-100 font-semibold mb-1 text-sm text-center">
@@ -247,7 +393,7 @@ export default function Home() {
 							</div>
 						)}
 					</div>
-				</button>
+				</div>
 			</main>
 			<footer className="border-t w-full flex items-center justify-center md:justify-end px-4 border-slate-400/50 p-4 text-sm text-slate-400 text-center max-w-7xl mx-auto">
 				<Link
