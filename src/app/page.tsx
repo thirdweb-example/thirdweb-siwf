@@ -133,7 +133,7 @@ export default function Home() {
 		contract: NFT_CONTRACT,
 		events: [tokensClaimedEvent({ claimer: account?.address })],
 	});
-	const { isSuccess, data } = useSignIn({});
+	const { data } = useSignIn({});
 	const { connect } = useConnect({
 		client: thirdwebClient,
 		accountAbstraction: {
