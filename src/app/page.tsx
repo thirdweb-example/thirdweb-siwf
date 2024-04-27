@@ -118,6 +118,7 @@ async function getFarcasterProfile(fid: number): Promise<User> {
 	return { username, pfp, addresses };
 }
 
+const FILTER_EVENTS = [tokensClaimedEvent()];
 export default function Home() {
 	const [fid, setFid] = useState<number | undefined>();
 	const [user, setUser] = useState<User>({});
@@ -131,7 +132,7 @@ export default function Home() {
 	const account = useActiveAccount();
 	const { data: events } = useContractEvents({
 		contract: NFT_CONTRACT,
-		events: [tokensClaimedEvent({ claimer: account?.address })],
+		events: FILTER_EVENTS,
 	});
 	const { data } = useSignIn({});
 	const { connect } = useConnect({
