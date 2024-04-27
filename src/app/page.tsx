@@ -205,7 +205,7 @@ export default function Home() {
 	}, [fid]);
 
 	useEffect(() => {
-		if (data) {
+		if (data?.fid) {
 			handleSuccess(data);
 		}
 	}, [data, handleSuccess]);
