@@ -212,7 +212,7 @@ export default function Home() {
 	}, [data, handleSuccess]);
 
 	useEffect(() => {
-		if (events) {
+		if (events && events.length > 0) {
 			setTokenId(events[events.length - 1].args.startTokenId); // get the *last* tokenId (in case they've minted multiple)
 		}
 	}, [events]);
