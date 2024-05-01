@@ -12,6 +12,7 @@ import {
 	Address,
 	defineChain,
 	getContract,
+	parseEventLogs,
 	sendAndConfirmTransaction,
 } from "thirdweb";
 import {
@@ -22,11 +23,7 @@ import {
 import classNames from "classnames";
 import { CheckIcon, GithubIcon, Loader2Icon, XIcon } from "lucide-react";
 import Link from "next/link";
-import {
-	useActiveAccount,
-	useConnect,
-	useContractEvents,
-} from "thirdweb/react";
+import { useActiveAccount, useConnect } from "thirdweb/react";
 
 /**
  * 	This codebase is meant for demo purposes only.
@@ -58,8 +55,12 @@ async function mint(account: Account, recipient: Address) {
 		account,
 		transaction: mintTx,
 	});
+	const events = parseEventLogs({
+		logs: res.logs,
+		events: [tokensClaimedEvent({ claimer: account.address as Address })],
+	});
 
-	return res.transactionHash;
+	return { hash: res.transactionHash, tokenId: events[0].args.startTokenId };
 }
 
 async function transfer(account: Account, recipient: Address, tokenId: bigint) {
@@ -118,7 +119,6 @@ async function getFarcasterProfile(fid: number): Promise<User> {
 	return { username, pfp, addresses };
 }
 
-const FILTER_EVENTS = [tokensClaimedEvent()];
 export default function Home() {
 	const [fid, setFid] = useState<number | undefined>();
 	const [user, setUser] = useState<User>({});
@@ -130,10 +130,6 @@ export default function Home() {
 	const [transferTx, setTransferTx] = useState<string>("");
 	const wallet = useMemo(() => inAppWallet(), []);
 	const account = useActiveAccount();
-	const { data: events } = useContractEvents({
-		contract: NFT_CONTRACT,
-		events: FILTER_EVENTS,
-	});
 	const { data } = useSignIn({});
 	const { connect } = useConnect({
 		client: thirdwebClient,
@@ -175,7 +171,8 @@ export default function Home() {
 			if (!account) return;
 			setStatus("minting");
 			const tx = await mint(account, account.address as Address);
-			setMintTx(tx);
+			setMintTx(tx.hash);
+			setTokenId(tx.tokenId);
 			setStatus("minted");
 		} catch (e) {
 			console.error(e);
@@ -210,12 +207,6 @@ export default function Home() {
 			handleSuccess(data);
 		}
 	}, [data, handleSuccess]);
-
-	useEffect(() => {
-		if (events && events.length > 0) {
-			setTokenId(events[events.length - 1].args.startTokenId); // get the *last* tokenId (in case they've minted multiple)
-		}
-	}, [events]);
 
 	return (
 		<div className="min-h-screen flex-col flex items-center gap-8">
@@ -256,15 +247,15 @@ export default function Home() {
 			</header>
 			<main className="mx-auto w-full flex-1 max-w-3xl mx-auto  px-4 py-16 gap-16">
 				<div
-					onClick={() => {
+					onMouseUp={() => {
 						if (account && status === "none") {
-							startMint();
+							setTimeout(startMint, 100);
 						}
 					}}
 					className={classNames(
-						"max-w-sm relative w-full mx-auto overflow-hidden flex flex-col gap-4 border border-slate-400/50 hover rounded-xl p-4 transition shadow-farcaster-purple/50 hover:shadow-farcaster-purple/75 shadow-2xl",
+						"max-w-sm relative w-full hover:scale-105 hover:-translate-y-2 mx-auto overflow-hidden flex flex-col gap-4 border border-slate-400/50 hover rounded-xl p-4 transition shadow-farcaster-purple/50 hover:shadow-farcaster-purple/75 shadow-2xl",
 						account && status === "none"
-							? "cursor-pointer hover:scale-105 focus: hover:-translate-y-2 active:scale-95"
+							? "cursor-pointer active:scale-100"
 							: "cursor-default"
 					)}
 				>
