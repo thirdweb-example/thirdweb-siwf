@@ -390,7 +390,7 @@ export default function Home() {
 								{fid && !account && (
 									<div className="flex justify-center items-center gap-2">
 										<Loader2Icon className="w-4 h-4 animate-spin" />
-										Generating smart wallet...
+										Authenticating with Farcaster...
 									</div>
 								)}
 							</div>
