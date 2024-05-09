@@ -95,7 +95,7 @@ async function getFarcasterLinkedAddresses(fid: number) {
 		.filter((address: Address) => address !== undefined);
 }
 
-async function getFatcasterUser(fid: number) {
+async function getFarcasterUser(fid: number) {
 	const res = await fetch(
 		`https://hub.pinata.cloud/v1/userDataByFid?fid=${fid}`
 	);
@@ -113,7 +113,7 @@ async function getFatcasterUser(fid: number) {
 }
 
 async function getFarcasterProfile(fid: number): Promise<User> {
-	const { username, pfp } = await getFatcasterUser(fid);
+	const { username, pfp } = await getFarcasterUser(fid);
 	const addresses = await getFarcasterLinkedAddresses(fid);
 
 	return { username, pfp, addresses };
